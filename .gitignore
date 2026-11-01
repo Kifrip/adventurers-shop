@@ -1,0 +1,15 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+
+# Local credentials and execution workspace
+.env
+.env.*
+!.env.example
+.aws/
+.codex/
+.agents/
+library-files/
+scratch/
+shared/
