@@ -22,27 +22,21 @@ npm run preview    # локальный просмотр production-сборки
 
 ## GitHub Pages
 
-Игра в браузере: **https://kifrip.github.io/adventurers-shop/play/**.
+Игра в браузере: **https://kifrip.github.io/adventurers-shop/**.
 
-Публикация идёт напрямую из ветки: **Settings → Pages → Source → Deploy from a branch**,
-ветка **main**, каталог **/ (root)**. Готовая версия хранится в `play/`; `.nojekyll`
-отключает обработку статических файлов. Для обновления игры выполните:
+В **Settings → Pages → Source** выбран **GitHub Actions**.
+Workflow `.github/workflows/pages.yml` автоматически запускается при каждом push
+в `main`: устанавливает зависимости, выполняет экономические тесты, собирает
+`dist/` и публикует его отдельным этапом. При ошибке тестов или сборки публикация
+не запускается. Workflow также доступен вручную через **Actions → Deploy game
+to GitHub Pages → Run workflow**.
 
-```sh
-npm test
-npm run build:pages
-git add play
-git commit -m "Update published game build"
-git push origin main
-```
+Для обновления достаточно закоммитить исходники и выполнить `git push origin main`.
+Сборка хранится в артефакте Actions; каталог `dist/` исключён из Git.
+Историческая ветка `gh-pages` больше не участвует в публикации.
 
-`build:pages` пересоздаёт только каталог `play/`, копируя туда свежий `dist/`.
-Workflow `.github/workflows/pages.yml` отдельно проверяет экономику и сборку.
-GitHub Pages автоматически публикует изменения в `main` своей стандартной сборкой.
-
-Отдельная ветка `gh-pages` также содержит готовую сборку. Чтобы использовать её
-для публикации игры в корне сайта, можно вручную выбрать `gh-pages` вместо `main`
-в настройках Pages; для текущего адреса `/play/` менять настройки не требуется.
+Старый адрес `/adventurers-shop/play/` перенаправляет на новый. Сохранения привязаны
+к тому же домену и ключу localStorage, поэтому прогресс сохраняется при переходе.
 
 В `vite.config.ts` заданы относительные пути: изображения, шрифты и скрипты
 работают под `/adventurers-shop/` и при обычном локальном запуске.
