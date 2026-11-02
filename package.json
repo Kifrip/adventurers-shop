@@ -9,7 +9,8 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --import tsx --test tests/*.test.ts",
     "balance": "node --import tsx scripts/balance.ts",
-    "test:browser": "node --import tsx scripts/browser.mjs"
+    "test:browser": "node --import tsx scripts/browser.mjs",
+    "test:mobile": "node --import tsx scripts/mobile.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",

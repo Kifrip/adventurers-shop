@@ -12,11 +12,12 @@ const imgs=GOODS.map(g=>{const i=new Image();i.src='data:image/svg+xml;charset=u
 interface Sprite {visit:Visit; born:number}
 export class ShopScene {
  private ctx:CanvasRenderingContext2D; private sprites:Sprite[]=[];private frame=0;private running=true;private start=performance.now();
- constructor(private canvas:HTMLCanvasElement,private getGame:()=>Game){this.ctx=canvas.getContext('2d')!;this.draw=this.draw.bind(this);this.frame=requestAnimationFrame(this.draw);}
+ private visible=true;private observer:IntersectionObserver;
+ constructor(private canvas:HTMLCanvasElement,private getGame:()=>Game){this.ctx=canvas.getContext('2d')!;this.draw=this.draw.bind(this);this.observer=new IntersectionObserver(([entry])=>{this.visible=entry.isIntersecting;});this.observer.observe(canvas);this.frame=requestAnimationFrame(this.draw);}
  add(v:Visit){this.sprites.push({visit:v,born:performance.now()});}
  clear(){this.sprites=[];}
- destroy(){this.running=false;cancelAnimationFrame(this.frame);}
- private draw(time:number){if(!this.running)return;const c=this.ctx,g=this.getGame(),w=900,h=440,t=(time-this.start)/1000;
+ destroy(){this.running=false;this.observer.disconnect();cancelAnimationFrame(this.frame);}
+ private draw(time:number){if(!this.running)return;if(!this.visible||document.hidden){this.frame=requestAnimationFrame(this.draw);return;}const c=this.ctx,g=this.getGame(),w=900,h=440,t=(time-this.start)/1000;
  c.clearRect(0,0,w,h);c.fillStyle='#bfa37e';c.fillRect(0,0,w,h);
  // Plaster, roof beams, and warm light.
  c.fillStyle='#d7bf96';c.fillRect(0,0,w,285);c.fillStyle='#c6aa83';for(let x=0;x<w;x+=90){c.fillRect(x,0,2,285);}

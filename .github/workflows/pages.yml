@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out project
         uses: actions/checkout@v4
@@ -29,6 +29,18 @@ jobs:
         run: npm test
       - name: Build game
         run: npm run build
+      - name: Install browser for touch tests
+        run: npx playwright install --with-deps chromium
+      - name: Check mobile gameplay
+        run: |
+          npm run preview -- --host 127.0.0.1 > /tmp/shop-preview.log 2>&1 &
+          shop_preview_pid=$!
+          trap 'kill "$shop_preview_pid"' EXIT
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ > /dev/null; then break; fi
+            sleep 1
+          done
+          TEST_URL=http://127.0.0.1:4173 npm run test:mobile
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
