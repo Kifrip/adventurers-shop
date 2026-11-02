@@ -22,12 +22,27 @@ npm run preview    # локальный просмотр production-сборки
 
 ## GitHub Pages
 
-Адрес игры после публикации: **https://kifrip.github.io/adventurers-shop/**.
+Игра в браузере: **https://kifrip.github.io/adventurers-shop/play/**.
 
-В настройках репозитория **Settings → Pages → Build and deployment → Source**
-выберите **GitHub Actions**. Workflow `.github/workflows/pages.yml` проверяет
-экономику, собирает игру и публикует `dist/` при каждом push в `main`.
-Его также можно запустить вручную: **Actions → Deploy game to GitHub Pages → Run workflow**.
+Публикация идёт напрямую из ветки: **Settings → Pages → Source → Deploy from a branch**,
+ветка **main**, каталог **/ (root)**. Готовая версия хранится в `play/`; `.nojekyll`
+отключает обработку статических файлов. Для обновления игры выполните:
+
+```sh
+npm test
+npm run build:pages
+git add play
+git commit -m "Update published game build"
+git push origin main
+```
+
+`build:pages` пересоздаёт только каталог `play/`, копируя туда свежий `dist/`.
+Workflow `.github/workflows/pages.yml` отдельно проверяет экономику и сборку.
+GitHub Pages автоматически публикует изменения в `main` своей стандартной сборкой.
+
+Отдельная ветка `gh-pages` также содержит готовую сборку. Чтобы использовать её
+для публикации игры в корне сайта, можно вручную выбрать `gh-pages` вместо `main`
+в настройках Pages; для текущего адреса `/play/` менять настройки не требуется.
 
 В `vite.config.ts` заданы относительные пути: изображения, шрифты и скрипты
 работают под `/adventurers-shop/` и при обычном локальном запуске.
