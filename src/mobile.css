@@ -7,7 +7,7 @@ button { touch-action: manipulation; }
 
 @media (max-width: 800px), (max-width: 1100px) and (max-height: 500px) {
   body { font-size: 14px; }
-  main { padding: 0 12px calc(150px + env(safe-area-inset-bottom)); }
+  main { padding: 0 max(12px, env(safe-area-inset-right)) calc(150px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
   .topbar {
     min-height: 64px; height: auto;
     padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
@@ -21,7 +21,7 @@ button { touch-action: manipulation; }
   .icon-button { width: 44px; height: 44px; font-size: 23px; }
   .quiet-button { min-height: 44px; padding: 10px 12px; font-size: 13px; }
   .overview {
-    position: sticky; top: 0; z-index: 15; min-height: 82px;
+    position: sticky; top: env(safe-area-inset-top); z-index: 15; min-height: 82px;
     margin: 0 -12px 12px; padding: 12px 16px; gap: 12px;
     background: #f4f0e7f7; border-bottom: 1px solid #dedccd;
     box-shadow: 0 3px 8px #50462c08;
@@ -195,7 +195,7 @@ button { touch-action: manipulation; }
 
 @media (max-width: 1100px) and (max-height: 500px) {
   main { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
-  .topbar { min-height: 54px; padding-top: 4px; padding-bottom: 4px; }
+  .topbar { min-height: 54px; padding-top: max(4px, env(safe-area-inset-top)); padding-bottom: 4px; }
   .overview { min-height: 65px; padding-top: 8px; padding-bottom: 8px; }
   .mobile-controls { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 14px; padding-top: 6px; }
   .mobile-turn-info { display: none; }

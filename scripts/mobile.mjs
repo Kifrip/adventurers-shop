@@ -42,12 +42,15 @@ try {
     await page.evaluate(() => document.fonts.ready);
     await fixedAction();
     await tab('goods').tap();
+    await page.clock.runFor(250);
     assert.equal(await tab('goods').getAttribute('aria-pressed'),'true');
     assert.equal(await page.locator('#goods tr').count(),6);
     await noOverflow();
     for(const element of await page.locator('.buy-controls button, .price-step, .mobile-nav button').all()) {
       const box = await element.boundingBox();
-      assert.ok(box&&box.width>=44&&box.height>=44,'touch target smaller than 44 px');
+      const label = await element.getAttribute('aria-label') || await element.innerText();
+      // A translating button can report 43.99999 px even with a 44 px CSS height.
+      assert.ok(box&&Math.round(box.width)>=44&&Math.round(box.height)>=44,`touch target smaller than 44 px: ${label} ${JSON.stringify(box)}`);
     }
     const buyPotion = page.locator('[data-action="buy"][data-item="1"][data-qty="1"]');
     await buyPotion.tap();
