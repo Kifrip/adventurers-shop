@@ -30,7 +30,7 @@ jobs:
       - name: Build game
         run: npm run build
       - name: Install browser for touch tests
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps --only-shell chromium
       - name: Check mobile gameplay
         run: |
           npm run preview -- --host 127.0.0.1 > /tmp/shop-preview.log 2>&1 &

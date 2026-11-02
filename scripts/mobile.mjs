@@ -109,6 +109,8 @@ try {
       await fixedAction();
       // Reflow to desktop must restore the same action and the full table.
       await page.setViewportSize({width:1280,height:1000});
+      await page.clock.runFor(100);
+      await page.waitForFunction(()=>document.getElementById('main-action').parentElement.id==='desktop-action-slot');
       assert.equal(await page.locator('#main-action').evaluate(el=>el.parentElement.id),'desktop-action-slot');
       assert.ok(await page.locator('.shop-card').isVisible());
       assert.ok(await page.locator('.inventory-card').isVisible());
