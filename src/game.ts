@@ -11,17 +11,24 @@ export const GOODS = [
 export type GoodId = typeof GOODS[number]['id'];
 export type Phase = 'prep'|'sales'|'summary'|'won'|'lost';
 export type Rng = () => number;
+export function demandInfo(value:number):{label:string;level:'low'|'normal'|'high'} {
+ if(value<.6)return {label:'Значительно ниже обычного',level:'low'};
+ if(value<.9)return {label:'Ниже обычного',level:'low'};
+ if(value<=1.1)return {label:'Обычный',level:'normal'};
+ if(value<2)return {label:'Выше обычного',level:'high'};
+ return {label:'Значительно выше обычного',level:'high'};
+}
 type Multipliers = Partial<Record<GoodId,number>>;
 export const EVENTS: {name:string; icon:string; desc:string; tip:string; demand:Multipliers; market:Multipliers; supply:number; traffic:number}[] = [
- {name:'Турнир у старой крепости',icon:'⚔',desc:'Рыцари съезжаются на турнир. Спрос на мечи ×2,2 и щиты ×1,6; их рыночная цена выше на 15%.',tip:'Сталь сегодня ценнее хлеба.',demand:{sword:2.2,shield:1.6},market:{sword:1.15,shield:1.15},supply:1,traffic:1.08},
- {name:'Тревожные вести',icon:'✚',desc:'В городе лихорадка. Спрос на зелья ×2,4, рыночная цена выше на 25%. Посетителей на 10% меньше.',tip:'Зелья нужны всем, но бюджет не бесконечен.',demand:{potion:2.4},market:{potion:1.25},supply:1,traffic:.9},
- {name:'Совет магов',icon:'✧',desc:'Приехали учёные маги. Спрос на свитки ×2 и артефакты ×1,8; их рыночные цены выше на 20%.',tip:'Дорогой товар может окупить целый день.',demand:{scroll:2,artifact:1.8},market:{scroll:1.2,artifact:1.2},supply:1,traffic:1.1},
+ {name:'Турнир у старой крепости',icon:'⚔',desc:'Рыцари съезжаются на турнир. Рыночные цены мечей и щитов выше на 15%.',tip:'Сталь сегодня ценнее хлеба.',demand:{sword:2.2,shield:1.6},market:{sword:1.15,shield:1.15},supply:1,traffic:1.08},
+ {name:'Тревожные вести',icon:'✚',desc:'В городе лихорадка. Рыночная цена зелий выше на 25%. Посетителей на 10% меньше.',tip:'Зелья нужны всем, но бюджет не бесконечен.',demand:{potion:2.4},market:{potion:1.25},supply:1,traffic:.9},
+ {name:'Совет магов',icon:'✧',desc:'Приехали учёные маги. Рыночные цены свитков и артефактов выше на 20%.',tip:'Дорогой товар может окупить целый день.',demand:{scroll:2,artifact:1.8},market:{scroll:1.2,artifact:1.2},supply:1,traffic:1.1},
  {name:'Караван с юга',icon:'☼',desc:'Торговый караван привёз товары. Все закупочные цены ниже на 22%. Посетителей на 5% больше.',tip:'Хороший день, чтобы пополнить запасы.',demand:{},market:{},supply:.78,traffic:1.05},
- {name:'Праздник урожая',icon:'❋',desc:'На площади ярмарка. Спрос на хлеб ×2,8, его рыночная цена выше на 35%. Посетителей на 20% больше.',tip:'Небольшая маржа тоже приносит золото.',demand:{bread:2.8},market:{bread:1.35},supply:1,traffic:1.2},
- {name:'Дорога в тумане',icon:'≋',desc:'Обозы задерживаются: закупки дороже на 18%. Путники ищут щиты и зелья: спрос ×1,5.',tip:'Вчерашние запасы сегодня особенно выгодны.',demand:{shield:1.5,potion:1.5},market:{shield:1.1,potion:1.1},supply:1.18,traffic:.95},
- {name:'Открыты древние руины',icon:'◇',desc:'Искатели сокровищ скупают снаряжение. Спрос на мечи ×1,5 и свитки ×1,8. Посетителей на 15% больше.',tip:'Приключение начинается с хорошей закупки.',demand:{sword:1.5,scroll:1.8},market:{scroll:1.12},supply:1,traffic:1.15},
- {name:'Тихий дождливый день',icon:'☂',desc:'Посетителей на 18% меньше. Хлеб и зелья востребованы на 40% сильнее, закупки дешевле на 8%.',tip:'Оставьте немного золота на чёрный день.',demand:{bread:1.4,potion:1.4},market:{},supply:.92,traffic:.82},
- {name:'Возвращение экспедиции',icon:'⚑',desc:'Путники вернулись с наградой. Посетителей на 25% больше, спрос на артефакты ×2, их цена выше на 15%.',tip:'У редкостей наконец появятся покупатели.',demand:{artifact:2},market:{artifact:1.15},supply:1,traffic:1.25},
+ {name:'Праздник урожая',icon:'❋',desc:'На площади ярмарка. Рыночная цена хлеба выше на 35%. Посетителей на 20% больше.',tip:'Небольшая маржа тоже приносит золото.',demand:{bread:2.8},market:{bread:1.35},supply:1,traffic:1.2},
+ {name:'Дорога в тумане',icon:'≋',desc:'Обозы задерживаются: закупки дороже на 18%. Путники ищут щиты и зелья.',tip:'Вчерашние запасы сегодня особенно выгодны.',demand:{shield:1.5,potion:1.5},market:{shield:1.1,potion:1.1},supply:1.18,traffic:.95},
+ {name:'Открыты древние руины',icon:'◇',desc:'Искатели сокровищ скупают снаряжение. Посетителей на 15% больше.',tip:'Приключение начинается с хорошей закупки.',demand:{sword:1.5,scroll:1.8},market:{scroll:1.12},supply:1,traffic:1.15},
+ {name:'Тихий дождливый день',icon:'☂',desc:'Посетителей на 18% меньше. Закупки дешевле на 8%.',tip:'Оставьте немного золота на чёрный день.',demand:{bread:1.4,potion:1.4},market:{},supply:.92,traffic:.82},
+ {name:'Возвращение экспедиции',icon:'⚑',desc:'Путники вернулись с наградой. Посетителей на 25% больше. Рыночная цена артефактов выше на 15%.',tip:'У редкостей наконец появятся покупатели.',demand:{artifact:2},market:{artifact:1.15},supply:1,traffic:1.25},
 ];
 export const UPGRADES = [
  {id:'shelf',name:'Дополнительная полка',desc:'+14 мест для товаров',cost:75,max:2},
@@ -38,6 +45,12 @@ export interface Stock {qty:number; price:number; lots:{qty:number; cost:number}
 export interface DayStats {day:number; revenue:number; cogs:number; visitors:number; lost:number; rent:number; upgrades:number; procurement:number; startCash:number; endCash:number; leftovers:number[]}
 export interface Visit {id:number; type:number; item:number; bought:boolean; price:number; budget:number; reason:string}
 export interface Game {version:1; seed:number; day:number; phase:Phase; cash:number; stock:Stock[]; costs:number[]; markets:number[]; demand:number[]; event:number; upgrades:Record<UpgradeId,number>; elapsed:number; visits:Visit[]; stats:DayStats; history:DayStats[]; paused:boolean}
+const DEMAND_NAMES=['хлеб','зелья здоровья','мечи','щиты','магические свитки','редкие артефакты'];
+export function eventDescription(g:Game):string {
+ const event=EVENTS[g.event];
+ const demand=GOODS.flatMap((good,i)=>event.demand[good.id]===undefined?[]:[`Спрос на ${DEMAND_NAMES[i]} ${demandInfo(g.demand[i]).label.toLowerCase()}.`]);
+ return [event.desc,...demand].join(' ');
+}
 export function random(g:Game):number {g.seed=(g.seed+0x6D2B79F5)|0;let t=g.seed;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;}
 export function seeded(seed:number):Rng {let n=seed|0;return ()=>{n=(n+0x6D2B79F5)|0;let t=n;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
 const blankStats=(day:number,cash:number):DayStats=>({day,revenue:0,cogs:0,visitors:0,lost:0,rent:0,upgrades:0,procurement:0,startCash:cash,endCash:cash,leftovers:[]});
@@ -61,7 +74,7 @@ export function buy(g:Game,i:number,qty:number):boolean {
  g.cash-=qty*g.costs[i];g.stats.procurement+=qty*g.costs[i];g.stock[i].qty+=qty;g.stock[i].lots.push({qty,cost:g.costs[i]});return true;
 }
 export function setPrice(g:Game,i:number,price:number):boolean {
- if(g.phase!=='prep'||!g.stock[i]||!Number.isInteger(price)||price<1||price>9999)return false;
+ if((g.phase!=='prep'&&g.phase!=='sales')||!g.stock[i]||!Number.isInteger(price)||price<1||price>9999)return false;
  g.stock[i].price=price;return true;
 }
 export function upgrade(g:Game,id:UpgradeId):boolean {
@@ -76,6 +89,7 @@ export function serve(g:Game):Visit|null {
  const rng=()=>random(g);const type=weighted([.27,.43,.30],rng),c=CUSTOMERS[type];
  const item=weighted(c.weights.map((w,i)=>w*g.demand[i]),rng);
  const budget=Math.round(c.budget[0]+rng()*(c.budget[1]-c.budget[0]));
+ // The visitor takes the posted price on arrival; later edits only affect new visitors.
  const s=g.stock[item], price=s.price;
  let reason='',bought=false;
  if(s.qty===0)reason='Нет на полке — ушёл без покупки';

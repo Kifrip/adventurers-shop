@@ -22,6 +22,10 @@ try{
  mkdirSync('test-results',{recursive:true});await page.screenshot({path:'test-results/shop-desktop.png',fullPage:true});
  await page.locator('[data-action="start"]').click();
  await page.clock.runFor(6000);assert.ok((await page.locator('#journal').innerText()).includes('·'));
+ const quoted=structuredClone((await snapshot()).visits);
+ await input.fill('31');await page.clock.runFor(1500);assert.equal(await input.inputValue(),'31');
+ assert.ok(await input.evaluate(el=>el===document.activeElement));await input.press('Enter');
+ assert.equal((await snapshot()).stock[1].price,31);assert.deepEqual((await snapshot()).visits.slice(0,quoted.length),quoted);
  await page.screenshot({path:'test-results/shop-sales.png',fullPage:true});
  await page.locator('#main-action').click();const paused=(await snapshot()).elapsed;await page.clock.runFor(6000);assert.equal((await snapshot()).elapsed,paused);
  await page.reload();assert.equal((await snapshot()).paused,true);await page.locator('#main-action').click();

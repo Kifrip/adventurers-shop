@@ -9,7 +9,8 @@ const browser = await chromium.launch({
   args: ['--no-sandbox', '--disable-dev-shm-usage'],
 });
 const base = process.env.TEST_URL || 'http://127.0.0.1:5173';
-const sizes = [[320,568], [360,740], [390,844], [430,932], [768,1024], [844,390]];
+const quick=process.argv.includes('--quick');
+const sizes = quick?[[390,844]]:[[320,568], [360,740], [390,844], [430,932], [768,1024], [844,390]];
 mkdirSync('test-results', { recursive: true });
 try {
   for (const [width,height] of sizes) {
@@ -73,12 +74,13 @@ try {
     await price.fill('28');await price.blur();
     await page.locator('#goods tr').last().scrollIntoViewIfNeeded();
     await fixedAction();await noOverflow();
-    if(width===390) {
+    if(width===390&&!quick) {
       await tab('goods').tap();
       await page.screenshot({path:'test-results/mobile-goods.png',animations:'disabled'});
     }
     await tab('upgrades').tap();
     assert.ok(await page.locator('.event-card').isVisible());
+    assert.doesNotMatch(await page.locator('#event-desc').innerText(),/×\s*\d|спрос[^.]*\d/i);
     await page.locator('[data-action="upgrade"][data-id="ads"]').tap();
     assert.equal((await state()).upgrades.ads,1);
     await tab('goods').tap();
@@ -88,19 +90,30 @@ try {
     await page.clock.runFor(6000);
     assert.ok((await page.locator('#journal').innerText()).includes('·'));
     await tab('goods').tap();
-    assert.ok(await price.isDisabled());
+    assert.equal(await price.isDisabled(),false);
     assert.ok(await buyPotion.isDisabled());
+    const quoted=structuredClone((await state()).visits);
+    await price.fill('31');await page.clock.runFor(1500);
+    assert.equal(await price.inputValue(),'31','Visitor updates must not erase a draft price');
+    assert.ok(await price.evaluate(el=>el===document.activeElement),'Typing must retain input focus');
+    await price.press('Enter');assert.equal((await state()).stock[1].price,31);
+    assert.deepEqual((await state()).visits.slice(0,quoted.length),quoted,'Existing guests keep their arrival prices');
+    await page.getByRole('button',{name:'Повысить цену: Зелье здоровья',exact:true}).tap();
+    assert.equal((await state()).stock[1].price,32);
+    await page.locator('[data-action="market"]').tap();
+    assert.equal((await state()).stock[1].price,(await state()).markets[1]);
     await fixedAction();
     await page.locator('#main-action').tap();
     const paused = await state();assert.equal(paused.paused,true);
+    await price.fill('30');await price.press('Enter');assert.equal((await state()).stock[1].price,30);
     await page.clock.runFor(4000);assert.equal((await state()).elapsed,paused.elapsed);
-    await page.reload();assert.equal((await state()).paused,true);
+    await page.reload();assert.equal((await state()).paused,true);assert.equal((await state()).stock[1].price,30);
     await page.getByRole('button',{name:'Правила игры',exact:true}).tap();
     assert.ok(await page.locator('.help-modal').isVisible());
     assert.ok(await page.locator('#mobile-controls').evaluate(el=>el.inert));
     await page.locator('[data-action="close-help"]').tap();
     await fixedAction();
-    if(width===390) {
+    if(width===390&&!quick) {
       await page.screenshot({path:'test-results/mobile-shop.png',animations:'disabled'});
       await page.locator('#main-action').tap();
       await page.evaluate(()=>{window.requestAnimationFrame=callback=>window.setTimeout(()=>callback(performance.now()),1000);});

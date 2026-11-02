@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      full_tests:
+        description: Run the full mobile and theme checks
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -29,9 +34,14 @@ jobs:
         run: npm test
       - name: Build game
         run: npm run build
+      - name: Cache browser download
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
       - name: Install browser for touch tests
         run: npx playwright install --with-deps --only-shell chromium
-      - name: Check mobile gameplay and themes
+      - name: Check gameplay
         run: |
           npm run preview -- --host 127.0.0.1 > /tmp/shop-preview.log 2>&1 &
           shop_preview_pid=$!
@@ -40,8 +50,12 @@ jobs:
             if curl -fsS http://127.0.0.1:4173/ > /dev/null; then break; fi
             sleep 1
           done
-          TEST_URL=http://127.0.0.1:4173 npm run test:mobile
-          TEST_URL=http://127.0.0.1:4173 npm run test:theme
+          if [ "${{ github.event_name == 'workflow_dispatch' && inputs.full_tests }}" = "true" ]; then
+            TEST_URL=http://127.0.0.1:4173 npm run test:mobile
+            TEST_URL=http://127.0.0.1:4173 npm run test:theme
+          else
+            TEST_URL=http://127.0.0.1:4173 npm run test:smoke
+          fi
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

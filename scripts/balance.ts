@@ -19,8 +19,24 @@ export function prepare(g:Game,strategy:Strategy){
   if(!options.length)break;buy(g,options[0],1);
  }
 }
-export function simulate(seed:number,strategy:Strategy){const g=createGame(seed);while(g.phase==='prep'){prepare(g,strategy);startDay(g);tick(g,90);if(g.phase==='summary')nextDay(g);}return g;}
+export function simulate(seed:number,strategy:Strategy,livePrices=false){
+ const g=createGame(seed);
+ while(g.phase==='prep'){
+  prepare(g,strategy);startDay(g);
+  if(!livePrices)tick(g,90);
+  else for(let interval=0;interval<3;interval++){
+   const before=g.visits.length;tick(g,30);
+   if(g.phase==='sales')for(let i=0;i<GOODS.length;i++){
+    // Only react to completed, visible refusals; never inspect a future customer's budget.
+    const refusals=g.visits.slice(before).filter(v=>v.item===i&&!v.bought&&(v.reason.startsWith('Дорого')||v.reason.startsWith('Не по карману'))).length;
+    if(refusals>=2&&g.stock[i].qty>0)setPrice(g,i,Math.max(1,Math.round(g.stock[i].price*.9)));
+   }
+  }
+  if(g.phase==='summary')nextDay(g);
+ }
+ return g;
+}
 if(process.argv[1]?.endsWith('balance.ts')){
  const strategies:Strategy[]=['balanced','margin','bargain','premium','speculator','adaptive'];
- for(const strategy of strategies){const games=Array.from({length:400},(_,i)=>simulate(i+1,strategy));const cash=games.map(g=>g.cash).sort((a,b)=>a-b);console.log(JSON.stringify({strategy,runs:games.length,winRate:games.filter(g=>g.phase==='won').length/games.length,median:cash[200],p10:cash[40],p90:cash[360],avgProfit:Math.round(games.reduce((a,g)=>a+g.history.reduce((n,s)=>n+profit(s),0),0)/games.length)}));}
+ for(const strategy of strategies)for(const livePrices of (process.argv.includes('--live-prices')?[false,true]:[false])){const games=Array.from({length:400},(_,i)=>simulate(i+1,strategy,livePrices));const cash=games.map(g=>g.cash).sort((a,b)=>a-b);console.log(JSON.stringify({strategy,pricing:livePrices?'reactive':'fixed',runs:games.length,winRate:games.filter(g=>g.phase==='won').length/games.length,median:cash[200],p10:cash[40],p90:cash[360],avgProfit:Math.round(games.reduce((a,g)=>a+g.history.reduce((n,s)=>n+profit(s),0),0)/games.length)}));}
 }
