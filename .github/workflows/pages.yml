@@ -31,7 +31,7 @@ jobs:
         run: npm run build
       - name: Install browser for touch tests
         run: npx playwright install --with-deps --only-shell chromium
-      - name: Check mobile gameplay
+      - name: Check mobile gameplay and themes
         run: |
           npm run preview -- --host 127.0.0.1 > /tmp/shop-preview.log 2>&1 &
           shop_preview_pid=$!
@@ -41,6 +41,7 @@ jobs:
             sleep 1
           done
           TEST_URL=http://127.0.0.1:4173 npm run test:mobile
+          TEST_URL=http://127.0.0.1:4173 npm run test:theme
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

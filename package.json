@@ -10,7 +10,8 @@
     "test": "node --import tsx --test tests/*.test.ts",
     "balance": "node --import tsx scripts/balance.ts",
     "test:browser": "node --import tsx scripts/browser.mjs",
-    "test:mobile": "node --import tsx scripts/mobile.mjs"
+    "test:mobile": "node --import tsx scripts/mobile.mjs",
+    "test:theme": "node --import tsx scripts/theme.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",

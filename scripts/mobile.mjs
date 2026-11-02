@@ -13,7 +13,7 @@ const sizes = [[320,568], [360,740], [390,844], [430,932], [768,1024], [844,390]
 mkdirSync('test-results', { recursive: true });
 try {
   for (const [width,height] of sizes) {
-    const context = await browser.newContext({ viewport:{width,height}, isMobile:true, hasTouch:true, deviceScaleFactor:1 });
+    const context = await browser.newContext({ viewport:{width,height}, isMobile:true, hasTouch:true, deviceScaleFactor:1, colorScheme:width===390||width===430?'dark':'light' });
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -46,7 +46,7 @@ try {
     assert.equal(await tab('goods').getAttribute('aria-pressed'),'true');
     assert.equal(await page.locator('#goods tr').count(),6);
     await noOverflow();
-    for(const element of await page.locator('.buy-controls button, .price-step, .mobile-nav button').all()) {
+    for(const element of await page.locator('.buy-controls button, .price-step, .mobile-nav button, .topbar button').all()) {
       const box = await element.boundingBox();
       const label = await element.getAttribute('aria-label') || await element.innerText();
       // A translating button can report 43.99999 px even with a 44 px CSS height.
