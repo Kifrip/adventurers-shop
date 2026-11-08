@@ -2,7 +2,7 @@ import {chromium} from '@playwright/test';
 import assert from 'node:assert/strict';
 import {mkdirSync,existsSync} from 'node:fs';
 import {simulate} from './balance.ts';
-import {serialize} from '../src/game.ts';
+import {DAY_SECONDS,serialize} from '../src/game.ts';
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||(!process.env.CI&&existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 const page=await browser.newPage({viewport:{width:1440,height:1100},deviceScaleFactor:1});
 const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(`${m.text()} ${m.location().url}`);});
@@ -31,7 +31,7 @@ try{
  await page.reload();assert.equal((await snapshot()).paused,true);await page.locator('#main-action').click();
  // Preserve economic timers; reduce decorative frames during accelerated campaign time.
  await page.evaluate(()=>{window.requestAnimationFrame=callback=>window.setTimeout(()=>callback(performance.now()),1000);});
- await page.clock.runFor(91_000);assert.equal((await snapshot()).phase,'summary');await page.waitForSelector('.summary-modal');
+ await page.clock.runFor(DAY_SECONDS*1000+200);assert.equal((await snapshot()).phase,'summary');await page.waitForSelector('.summary-modal');
  const day1=await snapshot();assert.equal(day1.cash,200-day1.stats.procurement+day1.stats.revenue-day1.stats.rent);
  await page.screenshot({path:'test-results/day-summary.png',fullPage:true});
  await page.locator('.summary-modal [data-action="next"]').click();assert.equal((await snapshot()).day,2);
@@ -43,7 +43,7 @@ try{
    if(await buy.isEnabled())await buy.click();
   }
   await page.locator('[data-action="market"]').click();
-  await page.locator('[data-action="start"]').click();await page.clock.runFor(91_000);
+  await page.locator('[data-action="start"]').click();await page.clock.runFor(DAY_SECONDS*1000+200);
   assert.ok(['summary','won','lost'].includes((await snapshot()).phase));
   if(day<7&&(await snapshot()).phase==='summary')await page.locator('.summary-modal [data-action="next"]').click();
  }

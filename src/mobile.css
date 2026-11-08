@@ -227,3 +227,18 @@ button { touch-action: manipulation; }
   .inventory-head h2 { font-size: 16px; }
   .inventory-head .eyebrow { display: none; }
 }
+
+@media (max-width: 800px), (max-width: 1100px) and (max-height: 500px) {
+  html { scroll-padding-top: 100px; scroll-padding-bottom: 210px; }
+  main { padding-bottom: calc(210px + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(210px + env(safe-area-inset-bottom)); }
+  .time-controls { margin: 0 0 6px; }
+  #mobile-time-slot { grid-column: 1 / -1; grid-row: 1; }
+  .urgent-label { grid-column: 1 / -1; grid-row: 3; }
+}
+@media (max-width: 1100px) and (max-height: 500px) {
+  main { padding-bottom: calc(140px + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(140px + env(safe-area-inset-bottom)); }
+  .mobile-controls { row-gap: 0; }
+  #mobile-action-slot, .mobile-nav { grid-row: 2; }
+}

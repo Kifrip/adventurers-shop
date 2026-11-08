@@ -1,4 +1,4 @@
-import {createGame,GOODS,buy,setPrice,upgrade,startDay,tick,nextDay,capacity,stockCount,rentFor,profit,visitorCount,type Game} from '../src/game.ts';
+import {DAY_SECONDS,createGame,GOODS,buy,setPrice,upgrade,startDay,tick,nextDay,capacity,stockCount,rentFor,profit,visitorCount,type Game} from '../src/game.ts';
 export type Strategy='balanced'|'bargain'|'premium'|'speculator'|'adaptive'|'margin';
 export function prepare(g:Game,strategy:Strategy){
  if(strategy==='adaptive'&&g.day===3&&g.cash>260)upgrade(g,'ads');
@@ -23,9 +23,9 @@ export function simulate(seed:number,strategy:Strategy,livePrices=false){
  const g=createGame(seed);
  while(g.phase==='prep'){
   prepare(g,strategy);startDay(g);
-  if(!livePrices)tick(g,90);
+  if(!livePrices)tick(g,DAY_SECONDS);
   else for(let interval=0;interval<3;interval++){
-   const before=g.visits.length;tick(g,30);
+   const before=g.visits.length;tick(g,DAY_SECONDS/3);
    if(g.phase==='sales')for(let i=0;i<GOODS.length;i++){
     // Only react to completed, visible refusals; never inspect a future customer's budget.
     const refusals=g.visits.slice(before).filter(v=>v.item===i&&!v.bought&&(v.reason.startsWith('Дорого')||v.reason.startsWith('Не по карману'))).length;

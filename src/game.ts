@@ -1,4 +1,5 @@
-export const DAY_SECONDS = 90;
+export const DAY_SECONDS = 45;
+export type GameSpeed = 1|2|3;
 export const GOAL = 1000;
 export const GOODS = [
   {id:'bread', name:'Хлеб', sub:'Из городской пекарни', cost:6, market:9, icon:'bread'},
@@ -44,7 +45,7 @@ export const CUSTOMERS = [
 export interface Stock {qty:number; price:number; lots:{qty:number; cost:number}[]}
 export interface DayStats {day:number; revenue:number; cogs:number; visitors:number; lost:number; rent:number; upgrades:number; procurement:number; startCash:number; endCash:number; leftovers:number[]}
 export interface Visit {id:number; type:number; item:number; bought:boolean; price:number; budget:number; reason:string}
-export interface Game {version:1; seed:number; day:number; phase:Phase; cash:number; stock:Stock[]; costs:number[]; markets:number[]; demand:number[]; event:number; upgrades:Record<UpgradeId,number>; elapsed:number; visits:Visit[]; stats:DayStats; history:DayStats[]; paused:boolean}
+export interface Game {version:2;speed:GameSpeed; seed:number; day:number; phase:Phase; cash:number; stock:Stock[]; costs:number[]; markets:number[]; demand:number[]; event:number; upgrades:Record<UpgradeId,number>; elapsed:number; visits:Visit[]; stats:DayStats; history:DayStats[]; paused:boolean}
 const DEMAND_NAMES=['хлеб','зелья здоровья','мечи','щиты','магические свитки','редкие артефакты'];
 export function eventDescription(g:Game):string {
  const event=EVENTS[g.event];
@@ -55,7 +56,7 @@ export function random(g:Game):number {g.seed=(g.seed+0x6D2B79F5)|0;let t=g.seed
 export function seeded(seed:number):Rng {let n=seed|0;return ()=>{n=(n+0x6D2B79F5)|0;let t=n;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
 const blankStats=(day:number,cash:number):DayStats=>({day,revenue:0,cogs:0,visitors:0,lost:0,rent:0,upgrades:0,procurement:0,startCash:cash,endCash:cash,leftovers:[]});
 export function createGame(seed=Date.now()):Game {
- const g:Game={version:1,seed:seed|0,day:1,phase:'prep',cash:200,stock:GOODS.map(x=>({qty:0,price:x.market,lots:[]})),costs:[],markets:[],demand:[],event:0,upgrades:{shelf:0,ads:0,reputation:0},elapsed:0,visits:[],stats:blankStats(1,200),history:[],paused:false};
+ const g:Game={version:2,speed:1,seed:seed|0,day:1,phase:'prep',cash:200,stock:GOODS.map(x=>({qty:0,price:x.market,lots:[]})),costs:[],markets:[],demand:[],event:0,upgrades:{shelf:0,ads:0,reputation:0},elapsed:0,visits:[],stats:blankStats(1,200),history:[],paused:false};
  rollDay(g);return g;
 }
 function rollDay(g:Game) {
@@ -69,9 +70,19 @@ export const stockCount=(g:Game)=>g.stock.reduce((n,x)=>n+x.qty,0);
 export const stockValue=(g:Game)=>g.stock.reduce((n,x)=>n+x.lots.reduce((a,l)=>a+l.qty*l.cost,0),0);
 export const rentFor=(day:number)=>12+day*2;
 export const profit=(s:DayStats)=>s.revenue-s.cogs-s.rent-s.upgrades;
+export function purchaseCost(g:Game,i:number):number {
+ // Gold and FIFO lot costs remain integers; round each urgent unit upward.
+ return g.phase==='sales'?Math.ceil(g.costs[i]*115/100):g.costs[i];
+}
 export function buy(g:Game,i:number,qty:number):boolean {
- if(g.phase!=='prep'||!g.stock[i]||!Number.isInteger(qty)||qty<=0||qty*g.costs[i]>g.cash||stockCount(g)+qty>capacity(g))return false;
- g.cash-=qty*g.costs[i];g.stats.procurement+=qty*g.costs[i];g.stock[i].qty+=qty;g.stock[i].lots.push({qty,cost:g.costs[i]});return true;
+ if((g.phase!=='prep'&&g.phase!=='sales')||!g.stock[i]||!Number.isInteger(qty)||qty<=0)return false;
+ const cost=purchaseCost(g,i);
+ if(qty*cost>g.cash||stockCount(g)+qty>capacity(g))return false;
+ g.cash-=qty*cost;g.stats.procurement+=qty*cost;g.stock[i].qty+=qty;g.stock[i].lots.push({qty,cost});return true;
+}
+export function setSpeed(g:Game,speed:number):boolean {
+ if((g.phase!=='prep'&&g.phase!=='sales')||![1,2,3].includes(speed))return false;
+ g.speed=speed as GameSpeed;return true;
 }
 export function setPrice(g:Game,i:number,price:number):boolean {
  if((g.phase!=='prep'&&g.phase!=='sales')||!g.stock[i]||!Number.isInteger(price)||price<1||price>9999)return false;
@@ -85,7 +96,7 @@ export function visitorCount(g:Game):number {return Math.round((20+g.day*.6)*EVE
 export function purchaseChance(price:number,market:number,tolerance:number,reputation=0):number {return 1/(1+Math.exp((price/market-tolerance-reputation*.13)*6));}
 function weighted(weights:number[],rng:Rng):number {let r=rng()*weights.reduce((a,b)=>a+b,0);for(let i=0;i<weights.length;i++){r-=weights[i];if(r<=0)return i;}return weights.length-1;}
 export function serve(g:Game):Visit|null {
- if(g.phase!=='sales'||g.stats.visitors>=visitorCount(g))return null;
+ if(g.phase!=='sales'||g.paused||g.stats.visitors>=visitorCount(g))return null;
  const rng=()=>random(g);const type=weighted([.27,.43,.30],rng),c=CUSTOMERS[type];
  const item=weighted(c.weights.map((w,i)=>w*g.demand[i]),rng);
  const budget=Math.round(c.budget[0]+rng()*(c.budget[1]-c.budget[0]));
@@ -104,9 +115,11 @@ export function serve(g:Game):Visit|null {
  const v={id:g.stats.visitors,type,item,bought,price,budget,reason};g.visits.push(v);return v;
 }
 export function startDay(g:Game):boolean {if(g.phase!=='prep')return false;g.phase='sales';g.elapsed=0;g.paused=false;return true;}
+// Input is real elapsed time. All game time and arrivals use the selected speed.
 export function tick(g:Game,seconds:number):Visit[] {
  if(g.phase!=='sales'||g.paused||!Number.isFinite(seconds)||seconds<=0)return [];
- g.elapsed=Math.min(DAY_SECONDS,g.elapsed+seconds);
+ const elapsed=g.elapsed+seconds*g.speed;
+ g.elapsed=elapsed>=DAY_SECONDS-1e-9?DAY_SECONDS:elapsed;
  const target=Math.min(visitorCount(g),Math.floor(g.elapsed/DAY_SECONDS*visitorCount(g)));
  const visits:Visit[]=[];while(g.stats.visitors<target){const v=serve(g);if(v)visits.push(v);else break;}
  if(g.elapsed>=DAY_SECONDS)finishDay(g);return visits;
@@ -126,13 +139,16 @@ export function serialize(g:Game):string{return JSON.stringify(g);}
 export function deserialize(raw:string):Game|null {
  try {
   const g=JSON.parse(raw) as Game;
+  const legacy=(g as {version:number}).version===1;
   const integer=(v:unknown,min:number,max=1e9)=>typeof v==='number'&&Number.isInteger(v)&&v>=min&&v<=max;
-  if(g.version!==1||!integer(g.seed,-2147483648,2147483647)||!integer(g.day,1,7)||!['prep','sales','summary','won','lost'].includes(g.phase)||!integer(g.cash,-1000)||!integer(g.event,0,EVENTS.length-1)||typeof g.elapsed!=='number'||!Number.isFinite(g.elapsed)||g.elapsed<0||g.elapsed>DAY_SECONDS||typeof g.paused!=='boolean')return null;
+  if((!legacy&&g.version!==2)||!integer(g.seed,-2147483648,2147483647)||!integer(g.day,1,7)||!['prep','sales','summary','won','lost'].includes(g.phase)||!integer(g.cash,-1000)||!integer(g.event,0,EVENTS.length-1)||typeof g.elapsed!=='number'||!Number.isFinite(g.elapsed)||g.elapsed<0||g.elapsed>(legacy?90:DAY_SECONDS)||typeof g.paused!=='boolean')return null;
+  if(!legacy&&![1,2,3].includes(g.speed))return null;
   if(!g.upgrades||!UPGRADES.every(u=>integer(g.upgrades[u.id],0,u.max)))return null;
-  if(!Array.isArray(g.stock)||g.stock.length!==6||!g.stock.every(s=>integer(s.qty,0,100)&&integer(s.price,1,9999)&&Array.isArray(s.lots)&&s.lots.every(l=>integer(l.qty,1,100)&&integer(l.cost,1,1000))&&s.lots.reduce((a,l)=>a+l.qty,0)===s.qty)||stockCount(g)>capacity(g))return null;
+  if(!Array.isArray(g.stock)||g.stock.length!==6||!g.stock.every(s=>integer(s.qty,0,100)&&integer(s.price,1,9999)&&Array.isArray(s.lots)&&s.lots.every(l=>integer(l.qty,1,100)&&integer(l.cost,1,1150))&&s.lots.reduce((a,l)=>a+l.qty,0)===s.qty)||stockCount(g)>capacity(g))return null;
   if(![g.costs,g.markets,g.demand].every(a=>Array.isArray(a)&&a.length===6&&a.every(n=>typeof n==='number'&&Number.isFinite(n)&&n>0&&n<=1000)))return null;
   const statsValid=(s:DayStats)=>s&&['day','revenue','cogs','visitors','lost','rent','upgrades','procurement'].every(k=>integer(s[k as keyof DayStats],0))&&integer(s.startCash,-1000)&&integer(s.endCash,-1000)&&s.lost<=s.visitors&&Array.isArray(s.leftovers)&&s.leftovers.every(n=>integer(n,0,100));
   if(!statsValid(g.stats)||!Array.isArray(g.history)||g.history.length>7||!g.history.every(statsValid)||!Array.isArray(g.visits)||g.visits.length>100||!g.visits.every(v=>integer(v.id,1,100)&&integer(v.type,0,2)&&integer(v.item,0,5)&&typeof v.bought==='boolean'&&integer(v.price,1,9999)&&integer(v.budget,0,1000)&&typeof v.reason==='string'&&v.reason.length<200))return null;
+  if(legacy){g.version=2;g.speed=1;g.elapsed=g.elapsed/90*DAY_SECONDS;}
   return g;
  }catch{return null;}
 }

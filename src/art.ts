@@ -27,10 +27,10 @@ export class ShopScene {
  private visible=true;private observer:IntersectionObserver;private dark=false;
  private color(value:string){return this.dark?(NIGHT_COLORS[value]??value):value;}
  constructor(private canvas:HTMLCanvasElement,private getGame:()=>Game){this.ctx=canvas.getContext('2d')!;this.draw=this.draw.bind(this);this.observer=new IntersectionObserver(([entry])=>{this.visible=entry.isIntersecting;});this.observer.observe(canvas);this.frame=requestAnimationFrame(this.draw);}
- add(v:Visit){this.sprites.push({visit:v,born:performance.now()});}
+ add(v:Visit){this.sprites.push({visit:v,born:this.getGame().elapsed});}
  clear(){this.sprites=[];}
  destroy(){this.running=false;this.observer.disconnect();cancelAnimationFrame(this.frame);}
- private draw(time:number){if(!this.running)return;if(!this.visible||document.hidden){this.frame=requestAnimationFrame(this.draw);return;}this.dark=document.documentElement.dataset.theme==='dark';const c=this.ctx,g=this.getGame(),w=900,h=440,t=(time-this.start)/1000;
+ private draw(time:number){if(!this.running)return;if(!this.visible||document.hidden){this.frame=requestAnimationFrame(this.draw);return;}this.dark=document.documentElement.dataset.theme==='dark';const c=this.ctx,g=this.getGame(),w=900,h=440,t=g.phase==='prep'?(time-this.start)/1000:g.elapsed;
  c.clearRect(0,0,w,h);c.fillStyle=this.color('#bfa37e');c.fillRect(0,0,w,h);
  // Plaster, roof beams, and warm light.
  c.fillStyle=this.color('#d7bf96');c.fillRect(0,0,w,285);c.fillStyle=this.color('#c6aa83');for(let x=0;x<w;x+=90){c.fillRect(x,0,2,285);}
@@ -56,8 +56,8 @@ export class ShopScene {
  c.fillStyle=this.color('#c1a372');c.beginPath();c.ellipse(200,284,26,28,0,0,7);c.fill();c.strokeStyle=this.color('#876c49');c.beginPath();c.moveTo(181,264);c.lineTo(215,264);c.stroke();
  c.strokeStyle=this.color('#68503d');c.beginPath();c.moveTo(853,20);c.lineTo(853,65);c.stroke();const glow=c.createRadialGradient(853,90,2,853,90,this.dark?95:55);glow.addColorStop(0,this.dark?'#ffe0a8c0':'#ffe0a890');glow.addColorStop(1,'#ffe0a800');c.fillStyle=glow;c.fillRect(758,-5,142,190);c.fillStyle=this.color('#695440');c.fillRect(839,67,28,38);c.fillStyle=this.color('#f4d389');c.fillRect(844,73,18,25);
  // Customers enter, decide, then leave. Their outcome matches the economy.
- this.sprites=this.sprites.filter(s=>time-s.born<6600);
- for(const s of this.sprites){const age=(time-s.born)/1000,enter=Math.min(1,age/1.2),leave=Math.max(0,(age-4.1)/2.5),x=330+enter*210+leave*450,y=325+Math.sin(age*7)*2;this.person(c,x,y,s.visit.type,age);
+ this.sprites=this.sprites.filter(s=>g.elapsed>=s.born&&g.elapsed-s.born<6.6);
+ for(const s of this.sprites){const age=g.elapsed-s.born,enter=Math.min(1,age/1.2),leave=Math.max(0,(age-4.1)/2.5),x=330+enter*210+leave*450,y=325+Math.sin(age*7)*2;this.person(c,x,y,s.visit.type,age);
  if(age>1&&age<4.7){const v=s.visit;const msg=v.bought?`Беру! −${v.price} з.`:v.reason.startsWith('Нет')?'Здесь пусто…':v.reason.startsWith('Не')?'Не по карману…':'Дороговато…';c.font='13px sans-serif';const tw=c.measureText(msg).width;c.fillStyle=this.color(v.bought?'#f6edcc':'#f0dfd1');c.beginPath();c.roundRect(x-tw/2-12,y-105,tw+24,31,8);c.fill();c.fillStyle=this.color('#4c5140');c.textAlign='center';c.fillText(msg,x,y-85);if(v.bought){c.fillStyle=this.color('#f4cf73');c.font='bold 20px Georgia';c.fillText(`+${v.price}`,x+45,y-105-age*8);}}
  }
  if(g.phase==='prep'){this.person(c,720,330,2,t);c.fillStyle=this.color('#f0dfb8');c.font='12px sans-serif';c.fillText('Всё начинается с хорошей закупки',710,362);}

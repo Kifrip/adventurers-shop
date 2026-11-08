@@ -1,7 +1,7 @@
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync } from 'node:fs';
-import { createGame, startDay, tick, serialize } from '../src/game.ts';
+import { DAY_SECONDS,createGame, startDay, tick, serialize } from '../src/game.ts';
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || (!process.env.CI && existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined),
@@ -75,7 +75,7 @@ try {
   }
   // Reports must have the same theme even when restored directly from a save.
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,colorScheme:'light'});
-  const page=await context.newPage();const game=createGame(17);startDay(game);tick(game,90);
+  const page=await context.newPage();const game=createGame(17);startDay(game);tick(game,DAY_SECONDS);
   await page.addInitScript(save=>{localStorage.setItem('adventurers-shop-theme','dark');localStorage.setItem('adventurers-shop-v1',save);},serialize(game));
   await page.goto(base);await page.waitForSelector('.summary-modal');
   await readable(page,'.summary-grid span','.summary-grid');
