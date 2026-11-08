@@ -10,6 +10,9 @@ const drawings:Record<string,string>={
 export function icon(id:string,cls=''):string {return `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" class="item-icon ${cls}" viewBox="0 0 60 60" aria-hidden="true">${drawings[id]??drawings.artifact}</svg>`;}
 const imgs=GOODS.map(g=>{const i=new Image();i.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(icon(g.icon));return i;});
 interface Sprite {visit:Visit; born:number}
+// The item drawing and the visitor's destination share the same shelf slot.
+const shelfSlot=(item:number)=>({x:512+(item%3)*108,y:112+Math.floor(item/3)*104});
+const lerp=(from:number,to:number,amount:number)=>from+(to-from)*amount;
 const NIGHT_COLORS:Record<string,string>={
  '#bfa37e':'#393c2f','#d7bf96':'#5e503b','#c6aa83':'#534832','#695041':'#302e25',
  '#9c7856':'#574632','#785c47':'#423a2c','#795a40':'#443b2d','#97b0a1':'#29414c',
@@ -46,7 +49,7 @@ export class ShopScene {
  c.fillStyle=this.color('#3c5947');c.fillRect(244,49,190,70);c.strokeStyle=this.color('#bdab79');c.strokeRect(250,55,178,58);c.fillStyle=this.color('#e9d7b0');c.textAlign='center';c.font='19px Georgia';c.fillText('ЛАВКА',339,79);c.font='12px Georgia';c.fillText('для добрых приключений',339,100);
  // Shelves with actual stock.
  for(let row=0;row<2;row++){const sy=112+row*104;c.fillStyle=this.color('#79583e');c.fillRect(495,sy-51,337,75);c.fillStyle=this.color('#5f4b37');c.fillRect(502,sy-44,323,62);c.fillStyle=this.color('#a47b50');c.fillRect(486,sy+21,356,13);c.fillStyle=this.color('#c69d65');c.fillRect(486,sy+21,356,4);
- for(let k=0;k<3;k++){const i=row*3+k,x=512+k*108;if(g.stock[i].qty&&imgs[i].complete&&imgs[i].naturalWidth>0){c.drawImage(imgs[i],x,sy-36,53,53);if(g.stock[i].qty>4){c.globalAlpha=.55;c.drawImage(imgs[i],x+34,sy-29,42,42);c.globalAlpha=1;}}else{c.fillStyle=this.color('#a28b6870');c.fillRect(x+13,sy+10,43,2);}
+ for(let k=0;k<3;k++){const i=row*3+k,{x}=shelfSlot(i);if(g.stock[i].qty&&imgs[i].complete&&imgs[i].naturalWidth>0){c.drawImage(imgs[i],x,sy-36,53,53);if(g.stock[i].qty>4){c.globalAlpha=.55;c.drawImage(imgs[i],x+34,sy-29,42,42);c.globalAlpha=1;}}else{c.fillStyle=this.color('#a28b6870');c.fillRect(x+13,sy+10,43,2);}
  c.fillStyle=this.color('#ead7ac');c.fillRect(x+7,sy+35,58,19);c.fillStyle=this.color('#5d4b35');c.font='11px monospace';c.fillText(`${g.stock[i].qty} шт.`,x+36,sy+48);}}
  // Door.
  c.fillStyle=this.color('#72543e');c.fillRect(254,140,162,160);c.fillStyle=this.color('#88684b');c.fillRect(263,148,144,152);c.fillStyle=this.color('#baa77d');c.fillRect(280,157,109,75);c.fillStyle=this.color('#476552');c.fillRect(286,163,97,63);c.fillStyle=this.color('#e2ca93');c.font='14px Georgia';c.fillText(g.phase==='sales'?'ОТКРЫТО':'СКОРО ОТКРОЕМ',335,199);c.fillStyle=this.color('#c8a25a');c.beginPath();c.arc(391,254,5,0,7);c.fill();
@@ -55,10 +58,24 @@ export class ShopScene {
  for(let i=0;i<7;i++){c.fillStyle=i%2?'#53714a':'#70844d';c.beginPath();c.ellipse(80+Math.sin(i*2)*22,240-i*7,8,21,Math.sin(i)*.7,0,7);c.fill();}
  c.fillStyle=this.color('#c1a372');c.beginPath();c.ellipse(200,284,26,28,0,0,7);c.fill();c.strokeStyle=this.color('#876c49');c.beginPath();c.moveTo(181,264);c.lineTo(215,264);c.stroke();
  c.strokeStyle=this.color('#68503d');c.beginPath();c.moveTo(853,20);c.lineTo(853,65);c.stroke();const glow=c.createRadialGradient(853,90,2,853,90,this.dark?95:55);glow.addColorStop(0,this.dark?'#ffe0a8c0':'#ffe0a890');glow.addColorStop(1,'#ffe0a800');c.fillStyle=glow;c.fillRect(758,-5,142,190);c.fillStyle=this.color('#695440');c.fillRect(839,67,28,38);c.fillStyle=this.color('#f4d389');c.fillRect(844,73,18,25);
- // Customers enter, decide, then leave. Their outcome matches the economy.
+ // Follow the selected product: door → aisle → shelf, wait, then return to the door.
+ // The outcome is still determined by the economy on arrival; movement is visual only.
  this.sprites=this.sprites.filter(s=>g.elapsed>=s.born&&g.elapsed-s.born<6.6);
- for(const s of this.sprites){const age=g.elapsed-s.born,enter=Math.min(1,age/1.2),leave=Math.max(0,(age-4.1)/2.5),x=330+enter*210+leave*450,y=325+Math.sin(age*7)*2;this.person(c,x,y,s.visit.type,age);
- if(age>1&&age<4.7){const v=s.visit;const msg=v.bought?`Беру! −${v.price} з.`:v.reason.startsWith('Нет')?'Здесь пусто…':v.reason.startsWith('Не')?'Не по карману…':'Дороговато…';c.font='13px sans-serif';const tw=c.measureText(msg).width;c.fillStyle=this.color(v.bought?'#f6edcc':'#f0dfd1');c.beginPath();c.roundRect(x-tw/2-12,y-105,tw+24,31,8);c.fill();c.fillStyle=this.color('#4c5140');c.textAlign='center';c.fillText(msg,x,y-85);if(v.bought){c.fillStyle=this.color('#f4cf73');c.font='bold 20px Georgia';c.fillText(`+${v.price}`,x+45,y-105-age*8);}}
+ for(const s of this.sprites){
+  const age=g.elapsed-s.born,slot=shelfSlot(s.visit.item),waiting=age>=1.8&&age<4.2;
+  const progress=age<1.8?age/1.8:age<4.2?1:Math.max(0,1-(age-4.2)/2.4);
+  const targetX=slot.x+27,targetY=s.visit.item<3?300:337;
+  const leg=progress<.35?progress/.35:(progress-.35)/.65;
+  const x=progress<.35?lerp(335,470,leg):lerp(470,targetX,leg);
+  const y=progress<.35?lerp(300,337,leg):lerp(337,targetY,leg);
+  if(waiting){
+   c.strokeStyle=this.color('#ead7ac');c.lineWidth=2;
+   c.beginPath();c.roundRect(slot.x-4,slot.y-40,65,62,7);c.stroke();
+  }
+  c.save();c.globalAlpha=age>6.2?(6.6-age)/.4:1;
+  this.person(c,x,y+(waiting?0:Math.sin(age*7)*2),s.visit.type,waiting?0:age);
+  if(waiting){const v=s.visit;const msg=v.bought?`Беру! −${v.price} з.`:v.reason.startsWith('Нет')?'Здесь пусто…':v.reason.startsWith('Не')?'Не по карману…':'Дороговато…';c.font='13px sans-serif';const tw=c.measureText(msg).width;c.fillStyle=this.color(v.bought?'#f6edcc':'#f0dfd1');c.beginPath();c.roundRect(x-tw/2-12,y-105,tw+24,31,8);c.fill();c.fillStyle=this.color('#4c5140');c.textAlign='center';c.fillText(msg,x,y-85);if(v.bought){c.fillStyle=this.color('#f4cf73');c.font='bold 20px Georgia';c.fillText(`+${v.price}`,x+45,y-105-(age-1.8)*8);}}
+  c.restore();
  }
  if(g.phase==='prep'){this.person(c,720,330,2,t);c.fillStyle=this.color('#f0dfb8');c.font='12px sans-serif';c.fillText('Всё начинается с хорошей закупки',710,362);}
  // Foreground counter, rug and sign.
