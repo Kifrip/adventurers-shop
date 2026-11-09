@@ -1,3 +1,4 @@
+import {localize} from './i18n';
 type Theme = 'light' | 'dark';
 const KEY = 'adventurers-shop-theme';
 const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
@@ -16,6 +17,7 @@ function applyTheme(theme: Theme) {
   const toggle = document.querySelector<HTMLButtonElement>('#theme-toggle')!;
   toggle.setAttribute('aria-pressed', String(dark));
   toggle.title = dark ? 'Включить светлую тему' : 'Включить тёмную тему';
+  localize(document.getElementById('app')!);
 }
 
 export function initTheme() {

@@ -14,7 +14,7 @@ npm run dev
 Откройте адрес из терминала (обычно http://localhost:5173).
 
 ```sh
-npm test           # 37 тестов экономики, времени и сохранений
+npm test           # 40 тестов экономики, времени, сохранений и перевода
 npm run balance    # 2400 кампаний: 6 стратегий × 400 seed
 npm run build      # проверка TypeScript и production-сборка в dist/
 npm run preview    # локальный просмотр production-сборки
@@ -160,3 +160,9 @@ npm run test:theme
 1. Контракты от конкретных приключенцев с наградами и сроками — больше планирования между днями.
 2. Прогноз завтрашних событий с неполной достоверностью — осмысленный риск закупок впрок.
 3. Постоянные клиенты с личными предпочтениями и доверием — повод думать о репутации и ценах на несколько дней вперёд.
+
+## Language / Язык
+
+Use **EN / RU** in the header to switch between English and Russian without restarting. The choice is saved separately from game progress. Both languages cover goods, events, customer messages, reports, help and the shop scene. Russian remains the default for existing players.
+
+`TEST_URL=http://localhost:5173 npm run test:language` checks English at mobile and desktop widths, language persistence, switching during paused trading, dialogs and reports. The translation catalog is `src/en.json`; game saves retain their original format.

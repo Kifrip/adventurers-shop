@@ -1,4 +1,5 @@
 import './style.css';
+import {getLanguage,setLanguage,localize} from './i18n';
 import './mobile.css';
 import './theme.css';
 import { initTheme, toggleTheme } from './theme';
@@ -13,11 +14,11 @@ const mobileViewport=window.matchMedia('(max-width: 800px), (max-width: 1100px) 
 type MobileTab='shop'|'goods'|'upgrades';
 function save(){try{localStorage.setItem(SAVE_KEY,serialize(game));saved=true;}catch{storageOK=false;}}
 function safe(text:string){return text.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));}
-function gold(n:number){return new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(n);}
+function gold(n:number){return new Intl.NumberFormat(getLanguage()==='en'?'en-US':'ru-RU',{maximumFractionDigits:0}).format(n);}
 function signed(n:number){return `${n>0?'+':''}${gold(n)}`;}
-function notice(msg:string){const el=document.querySelector('#toast')!;el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=window.setTimeout(()=>el.classList.remove('show'),3200);}
+function notice(msg:string){const el=document.querySelector('#toast')!;el.textContent=msg;localize(app);el.classList.add('show');clearTimeout(toastTimer);toastTimer=window.setTimeout(()=>el.classList.remove('show'),3200);}
 const chevron='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 5 7 7-7 7"/></svg>';
-app.innerHTML=`<header class="topbar"><a class="brand" href="./" aria-label="Лавка приключенца"><span class="brand-mark">⚑</span><span>Лавка приключенца<small>МАЛЕНЬКАЯ ЛАВКА. БОЛЬШОЕ ПРИКЛЮЧЕНИЕ.</small></span></a><nav><span class="save-status" id="save-status"></span><button class="icon-button theme-toggle" id="theme-toggle" data-action="theme" aria-label="Тёмная тема" aria-pressed="false" title="Включить тёмную тему"><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20.2 15.4A8.7 8.7 0 0 1 8.6 3.8a8.7 8.7 0 1 0 11.6 11.6Z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4 19 5"/></svg></button><button class="icon-button" data-action="help" title="Правила игры" aria-label="Правила игры">?</button><button class="quiet-button" data-action="reset"><span class="wide-label">Новая игра</span><span class="narrow-label">Заново</span></button></nav></header>
+app.innerHTML=`<header class="topbar"><a class="brand" href="./" aria-label="Лавка приключенца"><span class="brand-mark">⚑</span><span>Лавка приключенца<small>МАЛЕНЬКАЯ ЛАВКА. БОЛЬШОЕ ПРИКЛЮЧЕНИЕ.</small></span></a><nav><button class="quiet-button language-toggle" data-action="language" aria-label="Switch to English">EN</button><span class="save-status" id="save-status"></span><button class="icon-button theme-toggle" id="theme-toggle" data-action="theme" aria-label="Тёмная тема" aria-pressed="false" title="Включить тёмную тему"><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20.2 15.4A8.7 8.7 0 0 1 8.6 3.8a8.7 8.7 0 1 0 11.6 11.6Z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4 19 5"/></svg></button><button class="icon-button" data-action="help" title="Правила игры" aria-label="Правила игры">?</button><button class="quiet-button" data-action="reset"><span class="wide-label">Новая игра</span><span class="narrow-label">Заново</span></button></nav></header>
 <main><section class="overview"><div class="overview-intro"><div class="mobile-day"><strong id="mobile-day"></strong><span id="mobile-phase"></span></div><div class="eyebrow">ВАША ТОРГОВАЯ ИСТОРИЯ</div><h1>Семь дней до мечты<span class="title-dot">.</span></h1><p>Пусть каждый искатель приключений найдёт здесь своё.</p></div><div class="wallet"><span class="coin">✦</span><div><small>ЗОЛОТО В КАССЕ</small><strong id="cash"></strong></div><div class="goal"><span>Цель: 1 000 з.</span><div class="goal-track"><i id="goal-fill"></i></div></div></div></section>
 <section class="day-bar"><div class="day-label" id="day-label"></div><div class="days" id="days"></div><div class="phase-tag" id="phase-tag"></div></section>
 <button class="mobile-event" data-action="tab" data-tab="upgrades" aria-label="Посмотреть событие дня и улучшения"><span id="mobile-event-icon" aria-hidden="true"></span><span><small>СОБЫТИЕ ДНЯ</small><strong id="mobile-event-name"></strong></span>${chevron}</button>
@@ -95,6 +96,7 @@ function render(){
  document.querySelector<HTMLElement>('main')!.inert=modalOpen;
  document.querySelector<HTMLElement>('header')!.inert=modalOpen;
  $('mobile-controls').inert=modalOpen;
+ localize(app);
 }
 function renderModal(){
  const root=$('modal-root');
@@ -122,7 +124,7 @@ app.addEventListener('change',e=>{
  const row=el.closest('tr')!;
  row.querySelector<HTMLButtonElement>('[data-action="price-down"]')!.disabled=game.stock[i].price<=1;
  row.querySelector<HTMLButtonElement>('[data-action="price-up"]')!.disabled=game.stock[i].price>=9999;
- save();
+ save();localize(app);
 });
 app.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target instanceof HTMLInputElement&&e.target.dataset.price!==undefined){e.preventDefault();e.target.blur();}});
 app.addEventListener('click',e=>{
@@ -131,7 +133,8 @@ app.addEventListener('click',e=>{
  const phase=game.phase;advanceClock();
  if(phase==='sales'&&game.phase!=='sales'){save();render();return;}
  switch(b.dataset.action){
- case 'theme':toggleTheme();return;
+ case 'language':setLanguage(getLanguage()==='ru'?'en':'ru');save();render();return;
+ case 'theme':toggleTheme();localize(app);return;
  case 'tab':setMobileTab(b.dataset.tab as MobileTab);return;
  case 'price-down':case 'price-up':{const i=Number(b.dataset.item);setPrice(game,i,game.stock[i].price+(b.dataset.action==='price-up'?1:-1));break;}
  case 'buy':if(!buy(game,Number(b.dataset.item),Number(b.dataset.qty)))notice('Не хватает золота или места на полках.');break;

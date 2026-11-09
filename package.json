@@ -13,7 +13,8 @@
     "test:mobile": "node --import tsx scripts/mobile.mjs",
     "test:theme": "node --import tsx scripts/theme.mjs",
     "check": "npm test && npm run build",
-    "test:smoke": "node --import tsx scripts/mobile.mjs --quick"
+    "test:smoke": "node --import tsx scripts/mobile.mjs --quick",
+    "test:language": "node --import tsx scripts/language.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",

@@ -1,3 +1,4 @@
+import {translate} from './i18n';
 import { type Game, type Visit, CUSTOMERS, GOODS } from './game';
 const drawings:Record<string,string>={
  bread:'<path d="M7 31C1 24 7 12 18 10c7-7 19-5 24 2 12 1 15 12 9 20-8 8-35 7-44-1Z" fill="#dda45b" stroke="#8b542e" stroke-width="3"/><path d="m18 14-4 10m15-13-4 12m15-9-4 11" stroke="#f9d89b" stroke-width="4" stroke-linecap="round"/>',
@@ -34,6 +35,7 @@ export class ShopScene {
  clear(){this.sprites=[];}
  destroy(){this.running=false;this.observer.disconnect();cancelAnimationFrame(this.frame);}
  private draw(time:number){if(!this.running)return;if(!this.visible||document.hidden){this.frame=requestAnimationFrame(this.draw);return;}this.dark=document.documentElement.dataset.theme==='dark';const c=this.ctx,g=this.getGame(),w=900,h=440,t=g.phase==='prep'?(time-this.start)/1000:g.elapsed;
+ const text=(value:string,x:number,y:number)=>c.fillText(translate(value),x,y);
  c.clearRect(0,0,w,h);c.fillStyle=this.color('#bfa37e');c.fillRect(0,0,w,h);
  // Plaster, roof beams, and warm light.
  c.fillStyle=this.color('#d7bf96');c.fillRect(0,0,w,285);c.fillStyle=this.color('#c6aa83');for(let x=0;x<w;x+=90){c.fillRect(x,0,2,285);}
@@ -46,13 +48,13 @@ export class ShopScene {
  c.fillStyle=this.color('#f9dda51c');c.beginPath();c.moveTo(63,125);c.lineTo(183,125);c.lineTo(430,380);c.lineTo(190,380);c.fill();
  // Hanging shop board.
  c.strokeStyle=this.color('#795a40');c.lineWidth=3;c.beginPath();c.moveTo(285,20);c.lineTo(285,53);c.moveTo(395,20);c.lineTo(395,53);c.stroke();
- c.fillStyle=this.color('#3c5947');c.fillRect(244,49,190,70);c.strokeStyle=this.color('#bdab79');c.strokeRect(250,55,178,58);c.fillStyle=this.color('#e9d7b0');c.textAlign='center';c.font='19px Georgia';c.fillText('ЛАВКА',339,79);c.font='12px Georgia';c.fillText('для добрых приключений',339,100);
+ c.fillStyle=this.color('#3c5947');c.fillRect(244,49,190,70);c.strokeStyle=this.color('#bdab79');c.strokeRect(250,55,178,58);c.fillStyle=this.color('#e9d7b0');c.textAlign='center';c.font='19px Georgia';text('ЛАВКА',339,79);c.font='12px Georgia';text('для добрых приключений',339,100);
  // Shelves with actual stock.
  for(let row=0;row<2;row++){const sy=112+row*104;c.fillStyle=this.color('#79583e');c.fillRect(495,sy-51,337,75);c.fillStyle=this.color('#5f4b37');c.fillRect(502,sy-44,323,62);c.fillStyle=this.color('#a47b50');c.fillRect(486,sy+21,356,13);c.fillStyle=this.color('#c69d65');c.fillRect(486,sy+21,356,4);
  for(let k=0;k<3;k++){const i=row*3+k,{x}=shelfSlot(i);if(g.stock[i].qty&&imgs[i].complete&&imgs[i].naturalWidth>0){c.drawImage(imgs[i],x,sy-36,53,53);if(g.stock[i].qty>4){c.globalAlpha=.55;c.drawImage(imgs[i],x+34,sy-29,42,42);c.globalAlpha=1;}}else{c.fillStyle=this.color('#a28b6870');c.fillRect(x+13,sy+10,43,2);}
- c.fillStyle=this.color('#ead7ac');c.fillRect(x+7,sy+35,58,19);c.fillStyle=this.color('#5d4b35');c.font='11px monospace';c.fillText(`${g.stock[i].qty} шт.`,x+36,sy+48);}}
+ c.fillStyle=this.color('#ead7ac');c.fillRect(x+7,sy+35,58,19);c.fillStyle=this.color('#5d4b35');c.font='11px monospace';text(`${g.stock[i].qty} шт.`,x+36,sy+48);}}
  // Door.
- c.fillStyle=this.color('#72543e');c.fillRect(254,140,162,160);c.fillStyle=this.color('#88684b');c.fillRect(263,148,144,152);c.fillStyle=this.color('#baa77d');c.fillRect(280,157,109,75);c.fillStyle=this.color('#476552');c.fillRect(286,163,97,63);c.fillStyle=this.color('#e2ca93');c.font='14px Georgia';c.fillText(g.phase==='sales'?'ОТКРЫТО':'СКОРО ОТКРОЕМ',335,199);c.fillStyle=this.color('#c8a25a');c.beginPath();c.arc(391,254,5,0,7);c.fill();
+ c.fillStyle=this.color('#72543e');c.fillRect(254,140,162,160);c.fillStyle=this.color('#88684b');c.fillRect(263,148,144,152);c.fillStyle=this.color('#baa77d');c.fillRect(280,157,109,75);c.fillStyle=this.color('#476552');c.fillRect(286,163,97,63);c.fillStyle=this.color('#e2ca93');c.font='14px Georgia';text(g.phase==='sales'?'ОТКРЫТО':'СКОРО ОТКРОЕМ',335,199);c.fillStyle=this.color('#c8a25a');c.beginPath();c.arc(391,254,5,0,7);c.fill();
  // Plant, sacks, lantern.
  c.fillStyle=this.color('#996244');c.beginPath();c.moveTo(57,253);c.lineTo(102,253);c.lineTo(96,291);c.lineTo(64,291);c.fill();
  for(let i=0;i<7;i++){c.fillStyle=i%2?'#53714a':'#70844d';c.beginPath();c.ellipse(80+Math.sin(i*2)*22,240-i*7,8,21,Math.sin(i)*.7,0,7);c.fill();}
@@ -74,14 +76,14 @@ export class ShopScene {
   }
   c.save();c.globalAlpha=age>6.2?(6.6-age)/.4:1;
   this.person(c,x,y+(waiting?0:Math.sin(age*7)*2),s.visit.type,waiting?0:age);
-  if(waiting){const v=s.visit;const msg=v.bought?`Беру! −${v.price} з.`:v.reason.startsWith('Нет')?'Здесь пусто…':v.reason.startsWith('Не')?'Не по карману…':'Дороговато…';c.font='13px sans-serif';const tw=c.measureText(msg).width;c.fillStyle=this.color(v.bought?'#f6edcc':'#f0dfd1');c.beginPath();c.roundRect(x-tw/2-12,y-105,tw+24,31,8);c.fill();c.fillStyle=this.color('#4c5140');c.textAlign='center';c.fillText(msg,x,y-85);if(v.bought){c.fillStyle=this.color('#f4cf73');c.font='bold 20px Georgia';c.fillText(`+${v.price}`,x+45,y-105-(age-1.8)*8);}}
+  if(waiting){const v=s.visit;const msg=v.bought?`Беру! −${v.price} з.`:v.reason.startsWith('Нет')?'Здесь пусто…':v.reason.startsWith('Не')?'Не по карману…':'Дороговато…';c.font='13px sans-serif';const tw=c.measureText(translate(msg)).width;c.fillStyle=this.color(v.bought?'#f6edcc':'#f0dfd1');c.beginPath();c.roundRect(x-tw/2-12,y-105,tw+24,31,8);c.fill();c.fillStyle=this.color('#4c5140');c.textAlign='center';text(msg,x,y-85);if(v.bought){c.fillStyle=this.color('#f4cf73');c.font='bold 20px Georgia';text(`+${v.price}`,x+45,y-105-(age-1.8)*8);}}
   c.restore();
  }
- if(g.phase==='prep'){this.person(c,720,330,2,t);c.fillStyle=this.color('#f0dfb8');c.font='12px sans-serif';c.fillText('Всё начинается с хорошей закупки',710,362);}
+ if(g.phase==='prep'){this.person(c,720,330,2,t);c.fillStyle=this.color('#f0dfb8');c.font='12px sans-serif';text('Всё начинается с хорошей закупки',710,362);}
  // Foreground counter, rug and sign.
  c.fillStyle=this.color('#385d50');c.fillRect(355,370,380,70);c.fillStyle=this.color('#304e43');c.fillRect(365,379,360,54);c.strokeStyle=this.color('#9a9a68');c.lineWidth=2;c.strokeRect(371,385,348,44);
  c.fillStyle=this.color('#745138');c.fillRect(25,351,265,89);c.fillStyle=this.color('#946a45');c.fillRect(37,366,241,74);for(let x=49;x<270;x+=56){c.strokeStyle=this.color('#765337');c.strokeRect(x,375,43,65);}c.fillStyle=this.color('#bb9060');c.fillRect(14,339,289,17);c.fillStyle=this.color('#d1ab74');c.fillRect(14,337,289,5);
- c.fillStyle=this.color('#314d3d');c.fillRect(53,305,72,33);c.fillStyle=this.color('#dbca97');c.font='12px Georgia';c.fillText('КАССА',89,327);c.fillStyle=this.color('#d2b566');for(let i=0;i<4;i++)c.fillRect(155+i*14,330-i%2*4,12,5);
+ c.fillStyle=this.color('#314d3d');c.fillRect(53,305,72,33);c.fillStyle=this.color('#dbca97');c.font='12px Georgia';text('КАССА',89,327);c.fillStyle=this.color('#d2b566');for(let i=0;i<4;i++)c.fillRect(155+i*14,330-i%2*4,12,5);
  // Dust motes.
  for(let i=0;i<14;i++){c.fillStyle=this.color('#f8e4b645');c.fillRect((i*117+t*5)%900,40+(i*53+Math.sin(t+i)*9)%240,2,2);}
  this.frame=requestAnimationFrame(this.draw);
