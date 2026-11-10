@@ -1,3 +1,5 @@
+> Publishing now uses [the organization GitHub Actions pipeline](docs/platform-publishing.md). This supersedes older deployment notes below.
+
 # Лавка приключенца
 
 Полностью локальная браузерная игра о фэнтезийной торговле. TypeScript, Vite, Canvas 2D; без игровых движков и runtime-зависимостей. Все рисунки созданы программно, бесплатные шрифты включены в проект вместе с лицензиями.

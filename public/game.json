@@ -1,0 +1,27 @@
+{
+  "slug": "adventurers-shop",
+  "title": "Adventurer’s Shop",
+  "shortDescription": "Stock the shelves. Set your prices. Charm the occasional wizard.",
+  "description": "Run a small fantasy shop through a seven-day trading campaign. Buy inventory, set prices, react to daily events, and sell to peasants, warriors, and mages. Keep enough gold for the rent.",
+  "coverAlt": "Adventurer’s Shop gameplay showing an illustrated shop counter, shelves, and customers",
+  "primaryCategory": "Simulation",
+  "categories": [
+    "Simulation",
+    "Economy",
+    "Strategy"
+  ],
+  "controls": [
+    "Buy stock with the on-screen buttons and enter prices or use the minus and plus buttons.",
+    "Open the shop to start trading. Customers arrive automatically; you can change prices and restock during sales.",
+    "Space pauses trading. Escape closes help or dialogs. On mobile, use the bottom tabs for the shop, goods, and upgrades."
+  ],
+  "languages": "Russian interface",
+  "saveNote": "Saves locally every two seconds and when leaving. A hidden or restored trading session pauses. No earnings accrue while the game is closed.",
+  "accent": "purple",
+  "schemaVersion": 1,
+  "status": "published",
+  "dimension": "2D",
+  "featured": false,
+  "showSource": false,
+  "startQuery": ""
+}
