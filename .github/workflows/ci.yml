@@ -1,8 +1,10 @@
-name: Deploy game to GitHub Pages
+name: Check game
+# Checks only. Publishing is done by Cloudflare Workers Builds (see wrangler.jsonc).
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
     inputs:
       full_tests:
@@ -13,12 +15,8 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: github-pages
-  cancel-in-progress: false
-
 jobs:
-  build:
+  check:
     runs-on: ubuntu-24.04
     steps:
       - name: Check out project
@@ -56,21 +54,3 @@ jobs:
           else
             TEST_URL=http://127.0.0.1:4173 npm run test:smoke
           fi
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy game
-        id: deployment
-        uses: actions/deploy-pages@v4
